@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NFT Marketplace</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- TON Connect SDK для подключения кошелька -->
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding-bottom: 70px;
+            user-select: none;
+        }
+
+        /* Шапка */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #334155;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 18px;
+            color: var(--accent);
+        }
+
+        /* Контент / Сетки */
+        .page { display: none; padding: 15px; }
+        .page.active { display: block; }
+
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .nft-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nft-img {
+            width: 100%;
+            height: 140px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .nft-info { padding: 10px; }
+        .nft-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .nft-price { font-size: 13px; color: var(--accent); font-weight: 700; }
+
+        .buy-btn {
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 0;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        /* Профиль */
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        /* Нижнее меню */
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #1e293b;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #334155;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-btn.active { color: var(--accent); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="logo">💎 TON Portal</div>
+        <!-- Кнопка подключения TON кошелька -->
+        <div id="ton-connect"></div>
+    </header>
+
+    <!-- Страница Маркета -->
+    <div id="market" class="page active">
+        <h3 style="margin-top:0;">Горячие лоты 🔥</h3>
+        <div class="nft-grid">
+            <div class="nft-card">
+                <div class="nft-img" style="background-image: url('https://picsum.photos/200?random=1');"></div>
+                <div class="nft-info">
+                    <div class="nft-title">Telegram Star #402</div>
+                    <div class="nft-price">15 TON</div>
+                    <button class="buy-btn" onclick="buyNft('Telegram Star #402', 15)">Купить</button>
+                </div>
+            </div>
+            <div class="nft-card">
+                <div class="nft-img" style="background-image: url('https://picsum.photos/200?random=2');"></div>
+                <div class="nft-info">
+                    <div class="nft-title">Anon Number #999</div>
+                    <div class="nft-price">85 TON</div>
+                    <button class="buy-btn" onclick="buyNft('Anon Number #999', 85)">Купить</button>
+                </div>
+            </div>
+            <div class="nft-card">
+                <div class="nft-img" style="background-image: url('https://picsum.photos/200?random=3');"></div>
+                <div class="nft-info">
+                    <div class="nft-title">Gift Frog #12</div>
+                    <div class="nft-price">3.5 TON</div>
+                    <button class="buy-btn" onclick="buyNft('Gift Frog #12', 3.5)">Купить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Страница Профиля -->
+    <div id="profile" class="page">
+        <div class="profile-card">
+            <div class="avatar" id="user-avatar">👤</div>
+            <h2 id="user-name" style="margin: 5px 0;">Пользователь</h2>
+            <p style="color: var(--text-sub); font-size: 14px;">Мои инвентарь: 0 NFT</p>
+        </div>
+    </div>
+
+    <!-- Нижняя навигация -->
+    <nav>
+        <button class="nav-btn active" onclick="switchTab('market', this)">
+            <span>🛒</span> Маркет
+        </button>
+        <button class="nav-btn" onclick="switchTab('profile', this)">
+            <span>👤</span> Профиль
+        </button>
+    </nav>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на весь экран
+
+        // Подгружаем имя юзера из телеграма
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+        }
+
+        // Подключаем TON Connect UI (виджет кошелька)
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json',
+            buttonRootId: 'ton-connect'
+        });
+
+        // Навигация
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // Имитация покупки
+        function buyNft(name, price) {
+            if(!tonConnectUI.connected) {
+                tg.showAlert('Сначала подключите ваш TON кошелек вверху экрана!');
+            } else {
+                tg.showAlert(`Готово к покупке ${name} за ${price} TON. В продакшене тут открывается транзакция кошелька.`);
+            }
+        }
+    </script>
+</body>
+</html>
+  
