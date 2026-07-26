@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TON Portal</title>
+  
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --card-bg: rgba(22, 27, 38, 0.85);
+      --accent: #0088cc;
+      --accent-glow: rgba(0, 136, 204, 0.3);
+      --text: #ffffff;
+      --text-dim: #8a96a3;
+      --border: rgba(255, 255, 255, 0.08);
+      --owner-wallet: "EQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diq321NDeNaO04xGH";
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding-bottom: 90px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: rgba(11, 14, 20, 0.9);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0088cc;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .container {
+      padding: 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-img-wrapper {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      background: #161b26;
+    }
+
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-price {
+      font-size: 13px;
+      color: #00d2ff;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .btn-buy {
+      width: 100%;
+      padding: 9px;
+      border: none;
+      border-radius: 8px;
+      background: #0088cc;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn-buy:active {
+      opacity: 0.8;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .profile-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      background: #0088cc url('https://api.dicebear.com/7.x/bottts/svg?seed=TonUser') center/cover;
+    }
+
+    .form-box {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 65px;
+      background: rgba(11, 14, 20, 0.95);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">💎 TON PORTAL</div>
+    <div id="ton-connect-btn"></div>
+  </header>
+
+  <!-- МАРКЕТ -->
+  <div id="tab-market" class="tab-content active container">
+    <div class="section-title">Горячие лоты 🔥</div>
+    <div class="grid" id="market-items">
+      
+      <div class="card">
+        <div class="card-img-wrapper">
+          <img src="https://api.dicebear.com/7.x/shapes/svg?seed=Star402" class="card-img" alt="NFT">
+        </div>
+        <div class="card-title">Telegram Star #402</div>
+        <div class="card-price">15 TON</div>
+        <button class="btn-buy" onclick="buyNFT('Telegram Star #402', 15)">Купить</button>
+      </div>
+
+      <div class="card">
+        <div class="card-img-wrapper">
+          <img src="https://api.dicebear.com/7.x/identicon/svg?seed=Anon999" class="card-img" alt="NFT">
+        </div>
+        <div class="card-title">Anon Number #999</div>
+        <div class="card-price">85 TON</div>
+        <button class="btn-buy" onclick="buyNFT('Anon Number #999', 85)">Купить</button>
+      </div>
+
+      <div class="card">
+        <div class="card-img-wrapper">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Frog12" class="card-img" alt="NFT">
+        </div>
+        <div class="card-title">Gift Frog #12</div>
+        <div class="card-price">3.5 TON</div>
+        <button class="btn-buy" onclick="buyNFT('Gift Frog #12', 3.5)">Купить</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ПРОФИЛЬ -->
+  <div id="tab-profile" class="tab-content container">
+    
+    <div class="profile-card">
+      <div class="avatar"></div>
+      <h3 id="user-name">Пользователь</h3>
+      <p style="font-size: 12px; color: var(--text-dim); margin-top: 4px;" id="wallet-status">Кошелек не подключен</p>
+    </div>
+
+    <div class="section-title">Добавить NFT в маркет</div>
+    <div class="form-box">
+      <div class="form-group">
+        <label>Название NFT</label>
+        <input type="text" id="nft-title" class="form-control" placeholder="Telegram Star #100">
+      </div>
+      <div class="form-group">
+        <label>Цена (в TON)</label>
+        <input type="number" id="nft-price" class="form-control" placeholder="10">
+      </div>
+      <div class="form-group">
+        <label>Ссылка на картинку (URL)</label>
+        <input type="text" id="nft-img" class="form-control" placeholder="https://...">
+      </div>
+      <button class="btn-buy" style="margin-top: 8px;" onclick="addNFTToMarket()">Выставить на маркет</button>
+    </div>
+
+  </div>
+
+  <nav>
+    <div class="nav-item active" onclick="switchTab('market', this)">
+      <span style="font-size: 18px;">🛒</span>
+      <span>Маркет</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('profile', this)">
+      <span style="font-size: 18px;">👤</span>
+      <span>Профиль</span>
+    </div>
+  </nav>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      if (tg.initDataUnsafe?.user) {
+        document.getElementById('user-name').innerText = tg.initDataUnsafe.user.first_name;
+      }
+    }
+
+    // Исправленный манифест для кошелька
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json',
+      buttonRootId: 'ton-connect-btn'
+    });
+
+    tonConnectUI.onStatusChange(wallet => {
+      if (wallet) {
+        const addr = wallet.account.address;
+        document.getElementById('wallet-status').innerText = addr.substring(0, 6) + '...' + addr.substring(addr.length - 4);
+      } else {
+        document.getElementById('wallet-status').innerText = 'Кошелек не подключен';
+      }
+    });
+
+    function switchTab(tabName, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      
+      document.getElementById('tab-' + tabName).classList.add('active');
+      el.classList.add('active');
+    }
+
+    // Функция прямого добавления товара в витрину
+    function addNFTToMarket() {
+      const title = document.getElementById('nft-title').value.trim();
+      const price = document.getElementById('nft-price').value.trim();
+      let img = document.getElementById('nft-img').value.trim();
+
+      if (!title || !price) {
+        alert('Заполните название и цену!');
+        return;
+      }
+
+      if (!img) {
+        img = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(title)}`;
+      }
+
+      const grid = document.getElementById('market-items');
+      const newCard = document.createElement('div');
+      newCard.className = 'card';
+      newCard.innerHTML = `
+        <div class="card-img-wrapper">
+          <img src="${img}" class="card-img" alt="NFT" onerror="this.src='https://api.dicebear.com/7.x/shapes/svg?seed=fallback'">
+        </div>
+        <div class="card-title">${title}</div>
+        <div class="card-price">${price} TON</div>
+        <button class="btn-buy" onclick="buyNFT('${title}', ${price})">Купить</button>
+      `;
+
+      grid.prepend(newCard);
+
+      // Очистка формы
+      document.getElementById('nft-title').value = '';
+      document.getElementById('nft-price').value = '';
+      document.getElementById('nft-img').value = '';
+
+      alert('NFT успешно добавлен на витрину!');
+      switchTab('market', document.querySelectorAll('.nav-item')[0]);
+    }
+
+    async function buyNFT(title, price) {
+      if (!tonConnectUI.connected) {
+        alert('Сначала подключите TON кошелек!');
+        tonConnectUI.openModal();
+        return;
+      }
+
+      const totalNanoTon = (price * 1000000000).toString();
+      
+      const transaction = {
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [
+          {
+            address: "EQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diq321NDeNaO04xGH",
+            amount: totalNanoTon
+          }
+        ]
+      };
+
+      try {
+        await tonConnectUI.sendTransaction(transaction);
+        alert('Транзакция отправлена!');
+      } catch (e) {
+        console.error(e);
+        alert('Отказ от транзакции.');
+      }
+    }
+  </script>
+</body>
+</html>
